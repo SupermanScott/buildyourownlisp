@@ -8,7 +8,7 @@ clean:
 CFLAGS := -std=c99 -g -Wall -Wextra
 LIBS = -ledit -lm
 
-lispy: prompt.o parsing.o mpc.o
+lispy: prompt.o mpc.o lval.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 # Make will automatically generate the necessary commands
