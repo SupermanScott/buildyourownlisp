@@ -121,3 +121,94 @@ void lval_print(lval *v) {
     }
 }
 void lval_println (lval* v) { lval_print(v); putchar('\n'); }
+
+lval* lval_eval_sexpr(lval* v) {
+    for (int i = 0; i < v->count; i++) {
+        v->cell[i] = lval_eval(v->cell[i]);
+        if (v->cell[i]->type == LVAL_ERR) {
+            return lval_take(v, i);
+        }
+    }
+
+    if (v->count == 0) {
+        return v;
+    }
+    if (v->count == 1) {
+        return lval_take(v, 0);
+    }
+
+    lval* f = lval_pop(v, 0);
+    if (f->type != LVAL_SYM) {
+        lval_delete(f);
+        lval_delete(v);
+        return lval_err("S-expression does not start with a symbol");
+    }
+    lval* result = builtin_op(v, f->sym);
+    lval_delete(f);
+    return result;
+}
+
+lval* lval_eval(lval* v) {
+    if (v->type == LVAL_SEXPR) {
+        return lval_eval_sexpr(v);
+    }
+    return v;
+}
+
+lval* lval_pop(lval* v, int i) {
+    lval* x = v->cell[i];
+    /* Shift the memory following the item at "i" over the top of it */
+    memmove(&v->cell[i], &v->cell[i + 1], sizeof(lval*) * (v->count - i - 1));
+
+    v->count--;
+
+    v->cell = realloc(v->cell, sizeof(lval*) * v->count);
+    return x;
+}
+
+lval* lval_take(lval* v, int i) {
+    lval* x = lval_pop(v, i);
+    lval_delete(v);
+    return x;
+}
+
+lval* builtin_op(lval* v, char* op) {
+    for (int i = 0; i < v->count; i++) {
+        if (v->cell[i]->type != LVAL_NUM) {
+            lval_delete(v);
+            return lval_err("Cannot do operator on a non-number");
+        }
+    }
+
+    lval* x = lval_pop(v, 0);
+    if ((strcmp(op, "-") == 0) && v->count == 0) {
+        x->num = -1 * x->num;
+    }
+
+    while (v->count > 0) {
+        lval* y = lval_pop(v, 0);
+
+        if (strcmp(op, "+") == 0) {
+            x->num += y->num;
+        }
+        if (strcmp(op, "-") == 0) {
+            x->num -= y->num;
+        }
+        if (strcmp(op, "*") == 0) {
+            x->num *= y->num;
+        }
+        if (strcmp(op, "/") == 0) {
+            if (y->num == 0) {
+                lval_delete(x);
+                lval_delete(y);
+                x = lval_err("Division by Zero");
+            }
+            else {
+                x->num = x->num / y->num;
+            }
+        }
+        lval_delete(y);
+    }
+    lval_delete(v);
+    return x;
+}

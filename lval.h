@@ -18,3 +18,7 @@ typedef struct lval {
 lval* lval_read(mpc_ast_t* t);
 void lval_println(lval* v);
 void lval_delete(lval* v);
+lval* lval_eval(lval* v);
+lval* lval_take(lval* v, int i);
+lval* lval_pop(lval* v, int i);
+lval* builtin_op(lval* v, char* op);
