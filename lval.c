@@ -289,12 +289,28 @@ lval* builtin_join(lval* a) {
     return x;
 }
 
+lval* builtin_cons(lval* a) {
+    LASSERT_SIZE(a, 2, "Cons not called with two arguments");
+    LASSERT(a, (a->cell[1]->type == LVAL_QEXPR),
+            "Second argument to Cons must be a QExpr");
+
+    lval* n = lval_pop(a, 0);
+    lval* v = lval_pop(a, 0);
+
+    v->count++;
+    v->cell = realloc(v->cell, sizeof(lval*) * v->count);
+    memmove(&v->cell[1], &v->cell[0], sizeof(lval*) * (v->count - 1));
+    v->cell[0] = n;
+    return v;
+}
+
 lval* builtin(lval* a, char* func) {
     if (strcmp("list", func) == 0) {return builtin_list(a);}
     if (strcmp("eval", func) == 0) {return builtin_eval(a);}
     if (strcmp("join", func) == 0) {return builtin_join(a);}
     if (strcmp("head", func) == 0) {return builtin_head(a);}
     if (strcmp("tail", func) == 0) {return builtin_tail(a);}
+    if (strcmp("cons", func) == 0) {return builtin_cons(a);}
     if (strstr("+-/*", func)) {return builtin_op(a, func);}
     lval_delete(a);
     return lval_err("Unknown function!");
