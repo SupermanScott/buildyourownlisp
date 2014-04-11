@@ -1,6 +1,10 @@
 #pragma once
 #include "mpc.h"
-enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR };
+#define LASSERT(args, cond, err) if (!(cond)) { lval_delete(args); return lval_err(err); }
+#define LASSERT_SIZE(args, size, err) if (args->count != size) { lval_delete(args); return lval_err(err);}
+#define LASSERT_NONEMPTY(args, err) if (args->cell[0]->count == 0) { lval_delete(args); return lval_err(err);}
+
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_SEXPR, LVAL_QEXPR };
 
 typedef struct lval {
     int type;
@@ -21,4 +25,4 @@ void lval_delete(lval* v);
 lval* lval_eval(lval* v);
 lval* lval_take(lval* v, int i);
 lval* lval_pop(lval* v, int i);
-lval* builtin_op(lval* v, char* op);
+lval* builtin(lval* v, char* op);
