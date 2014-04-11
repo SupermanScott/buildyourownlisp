@@ -223,7 +223,7 @@ lval* builtin_op(lval* v, char* op) {
             if (y->num == 0) {
                 lval_delete(x);
                 lval_delete(y);
-                x = lval_err("Division by Zero");
+                return lval_err("Division by Zero");
             }
             else {
                 x->num = x->num / y->num;
