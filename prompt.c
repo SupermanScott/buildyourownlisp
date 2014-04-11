@@ -50,6 +50,9 @@ int main (int argc, char** argv) {
 
     while (1) {
         char* input = readline("lispy> ");
+        if (input == NULL) {
+            break;
+        }
         add_history(input);
 
         mpc_result_t r;
