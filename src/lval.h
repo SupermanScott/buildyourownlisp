@@ -19,6 +19,12 @@ typedef struct lval {
     int count;
 } lval;
 
+lval* lval_num (long x);
+lval* lval_err(char* m);
+lval* lval_sym(char* s);
+lval* lval_sexpr(void);
+lval* lval_qexpr(void);
+
 lval* lval_read(mpc_ast_t* t);
 void lval_println(lval* v);
 void lval_delete(lval* v);
@@ -26,3 +32,4 @@ lval* lval_eval(lval* v);
 lval* lval_take(lval* v, int i);
 lval* lval_pop(lval* v, int i);
 lval* builtin(lval* v, char* op);
+lval* lval_add(lval* v, lval* x);
