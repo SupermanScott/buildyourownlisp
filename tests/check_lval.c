@@ -131,6 +131,87 @@ MU_TEST(test_lval_join_non_qexpr) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_head_success) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    q = lval_add(q, lval_num(10));
+    v = lval_add(v, lval_add(q, lval_num(1)));
+
+    lval* result = builtin(v, "head");
+    mu_assert(result->type == LVAL_QEXPR,
+              "Calling head on a Qexpr should result in a qexpr");
+    mu_assert(result->count == 1,
+              "Calling head on a Qexpr should result in a qexpr of size 1");
+    mu_assert(result->cell[0]->num == 10,
+              "Calling head on qexpr {10 1} should result in 10");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_head_too_many_arguments) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    q = lval_add(q, lval_num(10));
+    v = lval_add(v, lval_add(q, lval_num(1)));
+    v = lval_add(v, lval_num(14));
+
+    lval* result = builtin(v, "head");
+    mu_assert(result->type == LVAL_ERR,
+              "Head takes only one Qexpr not many arguments.");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_head_empty_qexpr) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    v = lval_add(v, q);
+
+    lval* result = builtin(v, "head");
+    mu_assert(result->type == LVAL_ERR,
+              "Head requires a non empty qexpr.");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_tail_success) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    q = lval_add(q, lval_num(10));
+    v = lval_add(v, lval_add(q, lval_num(1)));
+
+    lval* result = builtin(v, "tail");
+    mu_assert(result->type == LVAL_QEXPR,
+              "Calling tail on a Qexpr should result in a qexpr");
+    mu_assert(result->count == 1,
+              "Calling tail on a Qexpr with size of 2 should result in a qexpr"\
+              " of size 1");
+    mu_assert(result->cell[0]->num == 1,
+              "Calling tail on qexpr {10 1} should result in 1");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_tail_too_many_arguments) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    q = lval_add(q, lval_num(10));
+    v = lval_add(v, lval_add(q, lval_num(1)));
+    v = lval_add(v, lval_num(14));
+
+    lval* result = builtin(v, "tail");
+    mu_assert(result->type == LVAL_ERR,
+              "Tail takes only one Qexpr not many arguments.");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_tail_empty_qexpr) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    v = lval_add(v, q);
+
+    lval* result = builtin(v, "tail");
+    mu_assert(result->type == LVAL_ERR,
+              "Tail requires a non empty qexpr.");
+    lval_delete(result);
+}
+
 MU_TEST_SUITE(builtin_suite)
 {
     MU_RUN_TEST(test_lval_cons);
@@ -141,6 +222,12 @@ MU_TEST_SUITE(builtin_suite)
     MU_RUN_TEST(test_lval_eval_non_qexpr);
     MU_RUN_TEST(test_lval_join_success);
     MU_RUN_TEST(test_lval_join_non_qexpr);
+    MU_RUN_TEST(test_lval_head_success);
+    MU_RUN_TEST(test_lval_head_too_many_arguments);
+    MU_RUN_TEST(test_lval_head_empty_qexpr);
+    MU_RUN_TEST(test_lval_tail_success);
+    MU_RUN_TEST(test_lval_tail_too_many_arguments);
+    MU_RUN_TEST(test_lval_tail_empty_qexpr);
 }
 
 int main() {
