@@ -6,5 +6,6 @@ AM_PROG_CC_C_O
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
 AC_CHECK_LIB([edit], [readline])
+AC_CHECK_LIB([rt], [clock_gettime])
 AC_CHECK_LIB([m], [fabs])
 AC_OUTPUT
