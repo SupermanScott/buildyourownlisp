@@ -251,6 +251,58 @@ MU_TEST(test_lval_len_non_qexpr) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_init_success) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+
+    q = lval_add(q, lval_num(333));
+    q = lval_add(q, lval_num(300));
+    q = lval_add(q, lval_num(4));
+
+    v = lval_add(v, q);
+
+    lval* result = builtin(v, "init");
+    mu_assert(result->type == LVAL_QEXPR,
+              "Init on a qexpr should return another qexpr");
+    mu_assert(result->count == 2,
+              "Init on a qexpr of size 3 should return a qexpr of size 2");
+    mu_assert(result->cell[0]->num == 333,
+              "Resulting qexpr should have 333");
+    mu_assert(result->cell[1]->num == 300,
+              "Resulting qexpr should have 300");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_init_too_many_arguments) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+
+    q = lval_add(q, lval_num(333));
+    q = lval_add(q, lval_num(300));
+    q = lval_add(q, lval_num(4));
+
+    v = lval_add(v, q);
+    v = lval_add(v, lval_qexpr());
+
+    lval* result = builtin(v, "init");
+    mu_assert(result->type == LVAL_ERR,
+              "Init with two qexpr should result in an error.");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_init_non_qexpr) {
+    lval* v = lval_sexpr();
+    lval* q = lval_num(1);
+
+    v = lval_add(v, q);
+
+    lval* result = builtin(v, "init");
+    mu_assert(result->type == LVAL_ERR,
+              "Init called with a number should result in an error.");
+    lval_delete(result);
+
+}
+
 MU_TEST_SUITE(builtin_suite)
 {
     MU_RUN_TEST(test_lval_cons);
@@ -270,6 +322,9 @@ MU_TEST_SUITE(builtin_suite)
     MU_RUN_TEST(test_lval_len_success);
     MU_RUN_TEST(test_lval_len_too_many);
     MU_RUN_TEST(test_lval_len_non_qexpr);
+    MU_RUN_TEST(test_lval_init_success);
+    MU_RUN_TEST(test_lval_init_too_many_arguments);
+    MU_RUN_TEST(test_lval_init_non_qexpr);
 }
 
 int main() {
