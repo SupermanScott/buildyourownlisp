@@ -3,11 +3,12 @@
 
 #include "mpc.h"
 #include "lval.h"
+#include "../config.h"
 
-#if defined(_WIN64) || defined(_WIN32)
+#if defined(_WIN64) || defined(_WIN32) || HAVE_LIBEDIT == 0
 // Windows does 'right' things by default. Write stub functions to handle this
 // default behavior
-static char buffer [2048]
+static char buffer [2048];
 char* readline (char* prompt) {
     fputs(prompt, stdout);
     fgets(buffer, 2048, stdin);
