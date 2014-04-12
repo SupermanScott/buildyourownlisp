@@ -313,6 +313,15 @@ lval* builtin_len(lval* a) {
     return v;
 }
 
+lval* builtin_init(lval* a) {
+    LASSERT_SIZE(a, 1, "init can only be called with one argument");
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "init only works with Qexpr");
+
+    lval* v = lval_take(a, 0);
+    lval_delete(lval_pop(v, v->count - 1));
+    return v;
+}
+
 lval* builtin(lval* a, char* func) {
     if (strcmp("list", func) == 0) {return builtin_list(a);}
     if (strcmp("eval", func) == 0) {return builtin_eval(a);}
@@ -321,6 +330,7 @@ lval* builtin(lval* a, char* func) {
     if (strcmp("tail", func) == 0) {return builtin_tail(a);}
     if (strcmp("cons", func) == 0) {return builtin_cons(a);}
     if (strcmp("len",  func) == 0) {return builtin_len(a);}
+    if (strcmp("init", func) == 0) {return builtin_init(a);}
     if (strstr("+-/*", func)) {return builtin_op(a, func);}
     lval_delete(a);
     return lval_err("Unknown function!");
