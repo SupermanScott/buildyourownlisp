@@ -14,7 +14,6 @@ MU_TEST(test_lval_cons) {
     v = lval_add(v, x);
 
     lval* result = builtin(v, "cons");
-    lval_println(result);
 
     mu_assert(result->type == LVAL_QEXPR,
               "Result from cons should be Qexpr not");
