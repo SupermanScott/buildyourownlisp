@@ -212,6 +212,45 @@ MU_TEST(test_lval_tail_empty_qexpr) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_len_success) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    v = lval_add(v, lval_add(lval_add(q, lval_num(200)), lval_num(600)));
+
+    lval* result = builtin(v, "len");
+
+    mu_assert(result->type == LVAL_NUM,
+              "Len should return an number");
+    mu_assert(result->num == 2,
+              "Len should return 2 for qexpr {200 600}");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_len_too_many) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    v = lval_add(v, lval_add(lval_add(q, lval_num(200)), lval_num(600)));
+    v = lval_add(v, lval_num(2));
+
+    lval* result = builtin(v, "len");
+
+    mu_assert(result->type == LVAL_ERR,
+              "Len called with two arguments should error out.");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_len_non_qexpr) {
+    lval* v = lval_sexpr();
+    lval* q = lval_num(1);
+    v = lval_add(v, q);
+
+    lval* result = builtin(v, "len");
+
+    mu_assert(result->type == LVAL_ERR,
+              "Len when called without a qexpr should error out");
+    lval_delete(result);
+}
+
 MU_TEST_SUITE(builtin_suite)
 {
     MU_RUN_TEST(test_lval_cons);
@@ -228,6 +267,9 @@ MU_TEST_SUITE(builtin_suite)
     MU_RUN_TEST(test_lval_tail_success);
     MU_RUN_TEST(test_lval_tail_too_many_arguments);
     MU_RUN_TEST(test_lval_tail_empty_qexpr);
+    MU_RUN_TEST(test_lval_len_success);
+    MU_RUN_TEST(test_lval_len_too_many);
+    MU_RUN_TEST(test_lval_len_non_qexpr);
 }
 
 int main() {
