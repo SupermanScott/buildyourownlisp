@@ -303,8 +303,7 @@ MU_TEST(test_lval_init_non_qexpr) {
 
 }
 
-MU_TEST_SUITE(builtin_suite)
-{
+MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
     MU_RUN_TEST(test_lval_list_qexpr);
@@ -327,8 +326,67 @@ MU_TEST_SUITE(builtin_suite)
     MU_RUN_TEST(test_lval_init_non_qexpr);
 }
 
+MU_TEST(test_lval_copy_num) {
+    lval* v = lval_num(15);
+    lval* x = lval_copy(v);
+
+    mu_assert(x->type == v->type,
+              "Copy should produce same types");
+    mu_assert(x->num == v->num,
+              "Copy lval should match the original");
+    lval_delete(x);
+    lval_delete(v);
+}
+
+MU_TEST(test_lval_copy_err) {
+    lval* v = lval_err("Testing error copying");
+    lval* x = lval_copy(v);
+
+    mu_assert(x->type == v->type,
+              "Copy should produce same types");
+    mu_assert(strcmp(x->err, v->err) == 0,
+              "Copy lval should match the original");
+    lval_delete(x);
+    lval_delete(v);
+}
+
+MU_TEST(test_lval_copy_sym) {
+    lval* v = lval_sym("sup");
+    lval* x = lval_copy(v);
+
+    mu_assert(x->type == v->type,
+              "Copy should produce same types");
+    mu_assert(strcmp(x->sym, v->sym) == 0,
+              "Copy lval should match the original");
+    lval_delete(x);
+    lval_delete(v);
+}
+MU_TEST(test_lval_copy_sandqexpr) {
+    lval* v = lval_qexpr();
+    v = lval_add(v, lval_num(14));
+    v = lval_add(v, lval_num(15));
+    lval* x = lval_copy(v);
+
+    mu_assert(x->type == v->type,
+              "Copy should produce same types");
+    for (int i = 0; i < v->count; i++) {
+        mu_assert(x->cell[i]->num == v->cell[i]->num,
+              "Copy lval should match the original");
+    }
+    lval_delete(x);
+    lval_delete(v);
+}
+
+MU_TEST_SUITE(lval_copy_suite) {
+    MU_RUN_TEST(test_lval_copy_num);
+    MU_RUN_TEST(test_lval_copy_err);
+    MU_RUN_TEST(test_lval_copy_sym);
+    MU_RUN_TEST(test_lval_copy_sandqexpr);
+}
+
 int main() {
     MU_RUN_SUITE(builtin_suite);
+    MU_RUN_SUITE(lval_copy_suite);
     MU_REPORT();
     MU_RETURN_VALUE();
 }
