@@ -1,4 +1,5 @@
 #include "../src/lval.h"
+#include "../src/lenv.h"
 #include "minunit/minunit.h"
 
 // builtin(lval*, char* op)
@@ -13,7 +14,9 @@ MU_TEST(test_lval_cons) {
     v = lval_add(v, y);
     v = lval_add(v, x);
 
-    lval* result = builtin(v, "cons");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_cons(e, v);
 
     mu_assert(result->type == LVAL_QEXPR,
               "Result from cons should be Qexpr not");
@@ -33,7 +36,9 @@ MU_TEST(test_lval_list_success) {
     v = lval_add(v, x);
     v = lval_add(v, y);
 
-    lval* result = builtin(v, "list");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_list(e, v);
     mu_assert(result->type == LVAL_QEXPR,
               "List should turn an sexpr into a qexpr");
     lval_delete(v);
@@ -47,7 +52,9 @@ MU_TEST(test_lval_list_qexpr) {
     v = lval_add(v, x);
     v = lval_add(v, y);
 
-    lval* result = builtin(v, "list");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_list(e, v);
     mu_assert(result->type == LVAL_ERR,
               "When list function is handed a non-sexpr it should error out.");
     lval_delete(v);
@@ -62,7 +69,9 @@ MU_TEST(test_lval_eval_success) {
 
     lval_add(v, q);
 
-    lval* result = builtin(v, "eval");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_eval(e, v);
     mu_assert(result->type == LVAL_NUM,
               "Eval a qexpr of {+ 1 2} should result in a number");
     mu_assert(result->num == 3,
@@ -76,7 +85,9 @@ MU_TEST(test_lval_eval_too_large) {
     lval_add(v, lval_num(1));
     lval_add(v, lval_num(2));
 
-    lval* result = builtin(v, "eval");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_eval(e, v);
     mu_assert(result->type == LVAL_ERR,
               "When passed more then on Qexpr, eval should error out");
     lval_delete(result);
@@ -86,7 +97,9 @@ MU_TEST(test_lval_eval_non_qexpr) {
     lval* v = lval_sexpr();
     lval_add(v, lval_sym("+"));
 
-    lval* result = builtin(v, "eval");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_eval(e, v);
     mu_assert(result->type == LVAL_ERR,
               "When not passed a qexpr eval should error out");
     lval_delete(result);
@@ -106,7 +119,9 @@ MU_TEST(test_lval_join_success) {
     v = lval_add(v, q);
     v = lval_add(v, y);
 
-    lval* result = builtin(v, "join");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_join(e, v);
     mu_assert(result->type == LVAL_QEXPR,
               "Joining two qexpr should result in a new qexpr");
     mu_assert(result->count == 4,
@@ -125,7 +140,9 @@ MU_TEST(test_lval_join_non_qexpr) {
     v = lval_add(v, q);
     v = lval_add(v, y);
 
-    lval* result = builtin(v, "join");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_join(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Joining a qexpr to a number should error out");
     lval_delete(result);
@@ -137,7 +154,9 @@ MU_TEST(test_lval_head_success) {
     q = lval_add(q, lval_num(10));
     v = lval_add(v, lval_add(q, lval_num(1)));
 
-    lval* result = builtin(v, "head");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_head(e, v);
     mu_assert(result->type == LVAL_QEXPR,
               "Calling head on a Qexpr should result in a qexpr");
     mu_assert(result->count == 1,
@@ -154,7 +173,9 @@ MU_TEST(test_lval_head_too_many_arguments) {
     v = lval_add(v, lval_add(q, lval_num(1)));
     v = lval_add(v, lval_num(14));
 
-    lval* result = builtin(v, "head");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_head(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Head takes only one Qexpr not many arguments.");
     lval_delete(result);
@@ -165,7 +186,9 @@ MU_TEST(test_lval_head_empty_qexpr) {
     lval* q = lval_qexpr();
     v = lval_add(v, q);
 
-    lval* result = builtin(v, "head");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_head(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Head requires a non empty qexpr.");
     lval_delete(result);
@@ -177,7 +200,9 @@ MU_TEST(test_lval_tail_success) {
     q = lval_add(q, lval_num(10));
     v = lval_add(v, lval_add(q, lval_num(1)));
 
-    lval* result = builtin(v, "tail");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_tail(e, v);
     mu_assert(result->type == LVAL_QEXPR,
               "Calling tail on a Qexpr should result in a qexpr");
     mu_assert(result->count == 1,
@@ -195,7 +220,9 @@ MU_TEST(test_lval_tail_too_many_arguments) {
     v = lval_add(v, lval_add(q, lval_num(1)));
     v = lval_add(v, lval_num(14));
 
-    lval* result = builtin(v, "tail");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_tail(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Tail takes only one Qexpr not many arguments.");
     lval_delete(result);
@@ -206,7 +233,9 @@ MU_TEST(test_lval_tail_empty_qexpr) {
     lval* q = lval_qexpr();
     v = lval_add(v, q);
 
-    lval* result = builtin(v, "tail");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_tail(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Tail requires a non empty qexpr.");
     lval_delete(result);
@@ -217,7 +246,9 @@ MU_TEST(test_lval_len_success) {
     lval* q = lval_qexpr();
     v = lval_add(v, lval_add(lval_add(q, lval_num(200)), lval_num(600)));
 
-    lval* result = builtin(v, "len");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_len(e, v);
 
     mu_assert(result->type == LVAL_NUM,
               "Len should return an number");
@@ -232,7 +263,9 @@ MU_TEST(test_lval_len_too_many) {
     v = lval_add(v, lval_add(lval_add(q, lval_num(200)), lval_num(600)));
     v = lval_add(v, lval_num(2));
 
-    lval* result = builtin(v, "len");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_len(e, v);
 
     mu_assert(result->type == LVAL_ERR,
               "Len called with two arguments should error out.");
@@ -244,7 +277,9 @@ MU_TEST(test_lval_len_non_qexpr) {
     lval* q = lval_num(1);
     v = lval_add(v, q);
 
-    lval* result = builtin(v, "len");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_len(e, v);
 
     mu_assert(result->type == LVAL_ERR,
               "Len when called without a qexpr should error out");
@@ -261,7 +296,9 @@ MU_TEST(test_lval_init_success) {
 
     v = lval_add(v, q);
 
-    lval* result = builtin(v, "init");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_init(e, v);
     mu_assert(result->type == LVAL_QEXPR,
               "Init on a qexpr should return another qexpr");
     mu_assert(result->count == 2,
@@ -284,7 +321,9 @@ MU_TEST(test_lval_init_too_many_arguments) {
     v = lval_add(v, q);
     v = lval_add(v, lval_qexpr());
 
-    lval* result = builtin(v, "init");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_init(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Init with two qexpr should result in an error.");
     lval_delete(result);
@@ -296,11 +335,12 @@ MU_TEST(test_lval_init_non_qexpr) {
 
     v = lval_add(v, q);
 
-    lval* result = builtin(v, "init");
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_init(e, v);
     mu_assert(result->type == LVAL_ERR,
               "Init called with a number should result in an error.");
     lval_delete(result);
-
 }
 
 MU_TEST_SUITE(builtin_suite) {

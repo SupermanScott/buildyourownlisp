@@ -27,3 +27,4 @@ tests/minunit/minunit_example
 src/.deps/
 src/.libs/
 src/lispy
+/tests/check_lenv
