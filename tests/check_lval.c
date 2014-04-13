@@ -343,6 +343,87 @@ MU_TEST(test_lval_init_non_qexpr) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_def_success) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    lval* x = lval_sym("x");
+    lval* a = lval_num(25);
+
+    q = lval_add(q, x);
+    v = lval_add(v, q);
+    v = lval_add(v, a);
+
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_def(e, v);
+
+    mu_assert(result->type == LVAL_SEXPR,
+              "Defining a symbol should result in an empty sexpr");
+    lval* val = lenv_get(e, lval_sym("x"));
+    mu_assert(val->type == LVAL_NUM,
+              "Getting x from environment should result in number");
+    mu_assert(val->num == 25,
+              "Getting x from environment should match 25");
+
+    lval_delete(result);
+    lval_delete(val);
+    lenv_delete(e);
+}
+
+MU_TEST(test_lval_def_multiple_eval) {
+    lval* v = lval_sexpr();
+    lval* q = lval_qexpr();
+    lval* x = lval_sym("x");
+    lval* y = lval_sym("y");
+    lval* a = lval_num(25);
+    lval* b = lval_num(30);
+
+    q = lval_add(q, x);
+    q = lval_add(q, y);
+
+    v = lval_add(v, q);
+    v = lval_add(v, a);
+    v = lval_add(v, b);
+
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* result = builtin_def(e, v);
+
+    mu_assert(result->type == LVAL_SEXPR,
+              "Defining a symbol should result in an empty sexpr");
+
+    lval* val = lenv_get(e, lval_sym("x"));
+    mu_assert(val->type == LVAL_NUM,
+              "Getting x from environment should result in number");
+    mu_assert(val->num == 25,
+              "Getting x from environment should match 25");
+    lval_delete(val);
+
+    val = lenv_get(e, lval_sym("y"));
+    mu_assert(val->type == LVAL_NUM,
+              "Getting y from environment should result in number");
+    mu_assert(val->num == 30,
+              "Getting y from environment should match 30");
+    lval_delete(val);
+    lval_delete(result);
+
+    lval* addition_expr = lval_sexpr();
+    addition_expr = lval_add(addition_expr, lval_sym("+"));
+    addition_expr = lval_add(addition_expr, lval_sym("x"));
+    addition_expr = lval_add(addition_expr, lval_sym("y"));
+
+    lval* addition_result = lval_eval(e, addition_expr);
+
+    mu_assert(addition_result->type == LVAL_NUM,
+              "Evaluating (+ x y) should result in a number");
+    mu_assert(addition_result->num == 55,
+              "Evaluating (+ x y) should result in an anser of 55");
+
+    lval_delete(addition_result);
+    lenv_delete(e);
+}
+
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
@@ -364,6 +445,8 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_init_success);
     MU_RUN_TEST(test_lval_init_too_many_arguments);
     MU_RUN_TEST(test_lval_init_non_qexpr);
+    MU_RUN_TEST(test_lval_def_success);
+    MU_RUN_TEST(test_lval_def_multiple_eval);
 }
 
 MU_TEST(test_lval_copy_num) {

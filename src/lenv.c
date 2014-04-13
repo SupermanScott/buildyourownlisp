@@ -68,6 +68,7 @@ void lenv_add_builtins(lenv* e) {
     lenv_add_builtin(e, "cons", builtin_cons);
     lenv_add_builtin(e, "len", builtin_len);
     lenv_add_builtin(e, "init", builtin_init);
+    lenv_add_builtin(e, "def", builtin_def);
 
     lenv_add_builtin(e, "+", builtin_add);
     lenv_add_builtin(e, "-", builtin_sub);

@@ -370,3 +370,21 @@ lval* builtin_init(lenv* e, lval* a) {
     lval_delete(lval_pop(v, v->count - 1));
     return v;
 }
+
+lval* builtin_def(lenv* e, lval* a) {
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "def not passed a qexpr");
+
+    lval* syms = a->cell[0];
+    for (int i = 0; i < syms->count; i++) {
+        LASSERT(a, (syms->cell[i]->type == LVAL_SYM), "def requires symbols");
+    }
+
+    LASSERT(a, (syms->count == a->count-1),
+            "def cannot define incorrect number of values to symbols");
+
+    for (int i = 0; i < syms->count; i++) {
+        lenv_put(e, syms->cell[i], a->cell[i + 1]);
+    }
+    lval_delete(a);
+    return lval_sexpr();
+}
