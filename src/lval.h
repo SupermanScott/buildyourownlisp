@@ -69,3 +69,5 @@ lval* builtin_sub(lenv* e, lval* a);
 lval* builtin_mul(lenv* e, lval* a);
 lval* builtin_div(lenv* e, lval* a);
 lval* builtin_def(lenv* e, lval* a);
+
+char* ltype_name(int t);

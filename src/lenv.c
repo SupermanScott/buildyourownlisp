@@ -63,6 +63,17 @@ void lenv_put(lenv* e, lval* k, lval* v) {
     strcpy(e->syms[e->count - 1], k->sym);
 }
 
+void lenv_print(lenv* e) {
+    for (int i = 0; i < e->count; i++) {
+        char* sym_name = malloc(strlen(e->syms[i]) + 1);
+        strcpy(sym_name, e->syms[i]);
+        lval_print(e, lval_sym(sym_name));
+        printf(": %s\t=>\t", ltype_name(e->vals[i]->type));
+        lval_print(e, e->vals[i]);
+        putchar('\n');
+    }
+}
+
 void lenv_add_builtin(lenv* e, char* name, lbuiltin func) {
     lval* k = lval_sym(name);
     lval* v = lval_fun(func);

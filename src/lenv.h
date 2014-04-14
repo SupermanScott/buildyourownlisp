@@ -15,3 +15,4 @@ void lenv_put(lenv* e, lval* k, lval* v);
 
 void lenv_add_builtins(lenv* e);
 lval* lenv_lookup_sym(lenv* e, lval* v);
+void lenv_print(lenv* e);
