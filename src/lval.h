@@ -1,9 +1,22 @@
 #pragma once
 #include "mpc.h"
 #include "lenv.h"
-#define LASSERT(args, cond, err) if (!(cond)) { lval_delete(args); return lval_err(err); }
-#define LASSERT_SIZE(args, size, err) if (args->count != size) { lval_delete(args); return lval_err(err);}
-#define LASSERT_NONEMPTY(args, err) if (args->cell[0]->count == 0) { lval_delete(args); return lval_err(err);}
+#define LASSERT(args, cond, fmt, ...)                   \
+    if (!(cond)) {                                      \
+        lval* err = lval_err(fmt, ##__VA_ARGS__);       \
+        lval_delete(args);                              \
+        return err;                                     \
+    }
+#define LASSERT_SIZE(args, size, fmt, ...) \
+    if (args->count != size) { \
+        lval_delete(args); \
+        return lval_err(fmt, ##__VA_ARGS__); \
+    }
+#define LASSERT_NONEMPTY(args, fmt, ...) \
+    if (args->cell[0]->count == 0){                           \
+        lval_delete(args);                                    \
+        return lval_err(fmt, ##__VA_ARGS__);                  \
+    }
 
 enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
 
@@ -26,7 +39,7 @@ struct lval {
 };
 
 lval* lval_num (long x);
-lval* lval_err(char* m);
+lval* lval_err(char* fmt, ...);
 lval* lval_sym(char* s);
 lval* lval_sexpr(void);
 lval* lval_qexpr(void);

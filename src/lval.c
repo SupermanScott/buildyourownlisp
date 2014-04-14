@@ -4,6 +4,18 @@
 #include "lval.h"
 #include "mpc.h"
 
+char* ltype_name(int t) {
+    switch(t) {
+    case LVAL_FUN: return "Function";
+    case LVAL_NUM: return "Number";
+    case LVAL_ERR: return "Error";
+    case LVAL_SYM: return "Symbol";
+    case LVAL_SEXPR: return "S-Expression";
+    case LVAL_QEXPR: return "Q-Expression";
+    default: return "Unknown";
+    }
+}
+
 lval* lval_num (long x) {
     lval* v = malloc(sizeof(lval));
     v->type = LVAL_NUM;
@@ -11,11 +23,17 @@ lval* lval_num (long x) {
     return v;
 }
 
-lval* lval_err(char* m) {
+lval* lval_err(char* fmt, ...) {
     lval* v = malloc(sizeof(lval));
     v->type = LVAL_ERR;
-    v->err = malloc(strlen(m) + 1);
-    strcpy(v->err, m);
+
+    va_list va;
+    va_start(va, fmt);
+    v->err = malloc(512);
+    vsnprintf(v->err, 511, fmt, va);
+    v->err = realloc(v->err, strlen(v->err) + 1);
+
+    va_end(va);
     return v;
 }
 
@@ -84,7 +102,8 @@ lval* lval_add(lval* v, lval* x) {
 
 lval* lval_read_num(mpc_ast_t* t) {
     long x = strtol(t->contents, NULL, 10);
-    return errno != ERANGE ? lval_num(x) : lval_err("invalid number");
+    return errno != ERANGE ? lval_num(x) :
+        lval_err("invalid number: %s", t->contents);
 }
 
 lval* lval_read(mpc_ast_t* t) {
@@ -194,7 +213,8 @@ lval* lval_eval_sexpr(lenv* e, lval* v) {
     if (f->type != LVAL_FUN) {
         lval_delete(v);
         lval_delete(f);
-        return lval_err("S-expression does not start with a symbol");
+        return lval_err("S-expression should start with a %s not a %s",
+                        ltype_name(LVAL_FUN), ltype_name(f->type));
     }
     lval* result = f->fun(e, v);
     lval_delete(f);
@@ -240,10 +260,9 @@ lval* lval_join(lval* x, lval* y) {
 
 lval* builtin_op(lenv* e, lval* v, char* op) {
     for (int i = 0; i < v->count; i++) {
-        if (v->cell[i]->type != LVAL_NUM) {
-            lval_delete(v);
-            return lval_err("Cannot do operator on a non-number");
-        }
+        LASSERT(v, (v->cell[i]->type == LVAL_NUM),
+                "Cannot do operator on a non-number: %s",
+                ltype_name(v->cell[i]->type))
     }
 
     lval* x = lval_pop(v, 0);
@@ -287,7 +306,8 @@ lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
 lval* builtin_head(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "Head function passed too many arguments");
     LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
-            "Head function not passed a Qexpr");
+            "Head function requires a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
     LASSERT_NONEMPTY(a, "Head function passed {}");
 
     lval* v = lval_take(a, 0);
@@ -300,7 +320,8 @@ lval* builtin_head(lenv* e, lval* a) {
 lval* builtin_tail(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "Tail function passed too many arguments");
     LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
-            "Tail function not passed a Qexpr");
+            "Tail function requires a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
     LASSERT_NONEMPTY(a, "Tail function passed {}");
 
     lval* v = lval_take(a, 0);
@@ -309,7 +330,9 @@ lval* builtin_tail(lenv* e, lval* a) {
 }
 
 lval* builtin_list(lenv* e, lval* a) {
-    LASSERT(a, (a->type == LVAL_SEXPR), "List function not passed a Sexpr");
+    LASSERT(a, (a->type == LVAL_SEXPR),
+            "List function requires a %s not a %s",
+            ltype_name(LVAL_SEXPR), ltype_name(a->type));
     a->type = LVAL_QEXPR;
     return a;
 }
@@ -317,7 +340,8 @@ lval* builtin_list(lenv* e, lval* a) {
 lval* builtin_eval(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "Eval function passed wrong number of arguments");
     LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
-            "Eval function not passed a Qexpr");
+            "Eval function requires a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
 
     lval* x = lval_take(a, 0);
     x->type = LVAL_SEXPR;
@@ -327,7 +351,8 @@ lval* builtin_eval(lenv* e, lval* a) {
 lval* builtin_join(lenv* e, lval* a) {
     for (int i = 0; i < a->count; i++) {
         LASSERT(a, (a->cell[i]->type == LVAL_QEXPR),
-                "Function join passed an argument that isn't a Qexpr");
+                "Join argument %d is not a %s. It is a %s",
+                i + 1, ltype_name(LVAL_QEXPR), ltype_name(a->cell[i]->type));
     }
 
     lval* x = lval_pop(a, 0);
@@ -341,7 +366,8 @@ lval* builtin_join(lenv* e, lval* a) {
 lval* builtin_cons(lenv* e, lval* a) {
     LASSERT_SIZE(a, 2, "Cons not called with two arguments");
     LASSERT(a, (a->cell[1]->type == LVAL_QEXPR),
-            "Second argument to Cons must be a QExpr");
+            "Second argument to Cons must be a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[1]->type));
 
     lval* n = lval_pop(a, 0);
     lval* v = lval_pop(a, 0);
@@ -355,7 +381,9 @@ lval* builtin_cons(lenv* e, lval* a) {
 
 lval* builtin_len(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "len can only be called with one argument");
-    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "len only works with Qexpr");
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
+            "len requires a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
 
     lval* v = lval_num(a->cell[0]->count);
     lval_delete(a);
@@ -364,7 +392,9 @@ lval* builtin_len(lenv* e, lval* a) {
 
 lval* builtin_init(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "init can only be called with one argument");
-    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "init only works with Qexpr");
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
+            "init requires a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
 
     lval* v = lval_take(a, 0);
     lval_delete(lval_pop(v, v->count - 1));
@@ -372,11 +402,15 @@ lval* builtin_init(lenv* e, lval* a) {
 }
 
 lval* builtin_def(lenv* e, lval* a) {
-    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "def not passed a qexpr");
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
+            "def requires a %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
 
     lval* syms = a->cell[0];
     for (int i = 0; i < syms->count; i++) {
-        LASSERT(a, (syms->cell[i]->type == LVAL_SYM), "def requires symbols");
+        LASSERT(a, (syms->cell[i]->type == LVAL_SYM),
+                "%d argument in the def list is not a %s it is a %s",
+                i, ltype_name(LVAL_SYM), ltype_name(syms->cell[i]->type));
     }
 
     LASSERT(a, (syms->count == a->count-1),

@@ -57,7 +57,6 @@ MU_TEST(test_lval_list_qexpr) {
     lval* result = builtin_list(e, v);
     mu_assert(result->type == LVAL_ERR,
               "When list function is handed a non-sexpr it should error out.");
-    lval_delete(v);
 }
 
 MU_TEST(test_lval_eval_success) {
