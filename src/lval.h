@@ -46,8 +46,8 @@ lval* lval_qexpr(void);
 lval* lval_fun(lbuiltin func);
 
 lval* lval_read(mpc_ast_t* t);
-void lval_println(lval* v);
-void lval_print(lval* v);
+void lval_println(lenv* e, lval* v);
+void lval_print(lenv* e, lval* v);
 void lval_delete(lval* v);
 lval* lval_copy(lval* v);
 

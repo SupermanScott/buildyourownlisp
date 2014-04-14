@@ -39,9 +39,29 @@ MU_TEST(test_lenv_get_not_found) {
     lenv_delete(e);
 }
 
+MU_TEST(test_lenv_lookup_sym_success) {
+    lenv* e = lenv_new();
+    lval* k = lval_sym("sup");
+
+    lval* v = lval_fun(builtin_add);
+    lenv_put(e, k, v);
+
+    lval* result = lenv_lookup_sym(e, v);
+
+    mu_assert(result->type == LVAL_SYM,
+              "Lookup failed to return a symbol");
+    mu_assert(strcmp(result->sym, "sup") == 0,
+              "Lockup's symbol doesn't match sup");
+    lval_delete(result);
+    lval_delete(v);
+    lval_delete(k);
+    lenv_delete(e);
+}
+
 MU_TEST_SUITE(lenv_add_remove_suite) {
     MU_RUN_TEST(test_lenv_get_success);
     MU_RUN_TEST(test_lenv_get_not_found);
+    MU_RUN_TEST(test_lenv_lookup_sym_success);
 }
 
 int main() {

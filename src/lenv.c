@@ -21,13 +21,26 @@ void lenv_delete(lenv* e) {
 
 lval* lenv_get(lenv* e, lval* k) {
     LASSERT(k, (k->type == LVAL_SYM),
-            "Getting a sum from environment with wrong type");
+            "Getting a sym from environment with wrong type");
     for (int i = 0; i < e->count; i++) {
         if (strcmp(k->sym, e->syms[i]) == 0) {
             return lval_copy(e->vals[i]);
         }
     }
-    return lval_err("unbound symbol");
+    return lval_err("unbound symbol: %s", k->sym);
+}
+
+lval* lenv_lookup_sym(lenv* e, lval* v) {
+    LASSERT(v, (v->type == LVAL_FUN),
+            "Looking up the sym from env with wrong type.");
+    for (int i = 0; i < e->count; i++) {
+        if (v->fun == e->vals[i]->fun) {
+            char* sym_name = malloc(strlen(e->syms[i]) + 1);
+            strcpy(sym_name, e->syms[i]);
+            return lval_sym(sym_name);
+        }
+    }
+    return lval_err("Function is not bound to a symbol");
 }
 
 void lenv_put(lenv* e, lval* k, lval* v) {
