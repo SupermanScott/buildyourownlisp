@@ -3,6 +3,7 @@
 
 lenv* lenv_new(void) {
     lenv* e = malloc(sizeof(lenv));
+    e->par = NULL;
     e->count = 0;
     e->syms = NULL;
     e->vals = NULL;
@@ -27,6 +28,9 @@ lval* lenv_get(lenv* e, lval* k) {
             return lval_copy(e->vals[i]);
         }
     }
+    if (e->par) {
+        return lenv_get(e->par, k);
+    }
     return lval_err("unbound symbol: %s", k->sym);
 }
 
@@ -34,7 +38,7 @@ lval* lenv_lookup_sym(lenv* e, lval* v) {
     LASSERT(v, (v->type == LVAL_FUN),
             "Looking up the sym from env with wrong type.");
     for (int i = 0; i < e->count; i++) {
-        if (v->fun == e->vals[i]->fun) {
+        if (v->builtin == e->vals[i]->builtin) {
             char* sym_name = malloc(strlen(e->syms[i]) + 1);
             strcpy(sym_name, e->syms[i]);
             return lval_sym(sym_name);
@@ -63,6 +67,13 @@ void lenv_put(lenv* e, lval* k, lval* v) {
     strcpy(e->syms[e->count - 1], k->sym);
 }
 
+void lenv_def(lenv* e, lval* k, lval* v) {
+    while (e->par) {
+        e = e->par;
+    }
+    lenv_put(e, k, v);
+}
+
 void lenv_print(lenv* e) {
     for (int i = 0; i < e->count; i++) {
         char* sym_name = malloc(strlen(e->syms[i]) + 1);
@@ -72,6 +83,23 @@ void lenv_print(lenv* e) {
         lval_print(e, e->vals[i]);
         putchar('\n');
     }
+}
+
+lenv* lenv_copy(lenv* e) {
+    lenv* n = malloc(sizeof(lenv));
+    n->count = e->count;
+    n->par = e->par;
+
+    n->syms = malloc(sizeof(char*) * e->count);
+    n->vals = malloc(sizeof(lval*) * e->count);
+    for (int i = 0; i < e->count; i++) {
+        n->vals[i] = lval_copy(e->vals[i]);
+
+        n->syms[i] = malloc(strlen(e->syms[i]) + 1);
+        strcpy(n->syms[i], e->syms[i]);
+    }
+
+    return n;
 }
 
 void lenv_add_builtin(lenv* e, char* name, lbuiltin func) {
@@ -93,6 +121,8 @@ void lenv_add_builtins(lenv* e) {
     lenv_add_builtin(e, "len", builtin_len);
     lenv_add_builtin(e, "init", builtin_init);
     lenv_add_builtin(e, "def", builtin_def);
+    lenv_add_builtin(e, "=", builtin_put);
+    lenv_add_builtin(e, "\\", builtin_lambda);
 
     lenv_add_builtin(e, "+", builtin_add);
     lenv_add_builtin(e, "-", builtin_sub);

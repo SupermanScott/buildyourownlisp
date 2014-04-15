@@ -67,7 +67,7 @@ lval* lval_qexpr(void) {
 lval* lval_fun(lbuiltin func) {
     lval* v = malloc(sizeof(lval));
     v->type = LVAL_FUN;
-    v->fun = func;
+    v->builtin = func;
     return v;
 }
 
@@ -88,7 +88,13 @@ void lval_delete(lval* v) {
         }
         free(v->cell);
         break;
-    case LVAL_FUN: break; // don't do anything
+    case LVAL_FUN:
+        if (v->builtin == NULL) {
+            lenv_delete(v->env);
+            lval_delete(v->formals);
+            lval_delete(v->body);
+        }
+        break;
     }
     free(v);
 }
@@ -97,6 +103,17 @@ lval* lval_add(lval* v, lval* x) {
     v->count++;
     v->cell = realloc(v->cell, sizeof(lval*) * v->count);
     v->cell[v->count - 1] = x;
+    return v;
+}
+
+lval* lval_lambda(lval* formals, lval* body) {
+    lval* v = malloc(sizeof(lval));
+    v->type = LVAL_FUN;
+
+    v->builtin = NULL;
+    v->env = lenv_new();
+    v->formals = formals;
+    v->body = body;
     return v;
 }
 
@@ -159,6 +176,11 @@ void lval_print(lenv* e, lval *v) {
     case LVAL_FUN:
         printf("<function:");
         lval_print(e, lenv_lookup_sym(e, v));
+        if (v->builtin == NULL) {
+            printf("(\\ ");
+            lval_print(e, v->formals); putchar(' ');
+            lval_print(e, v->body); putchar(')');
+        }
         putchar('>');
         break;
     }
@@ -174,7 +196,12 @@ lval* lval_copy(lval* v) {
         x->num = v->num;
         break;
     case LVAL_FUN:
-        x->fun = v->fun;
+        x->builtin = v->builtin;
+        if (v->builtin == NULL) {
+            x->env = lenv_copy(v->env);
+            x->formals = lval_copy(v->formals);
+            x->body = lval_copy(v->body);
+        }
         break;
 
     case LVAL_ERR:
@@ -220,7 +247,7 @@ lval* lval_eval_sexpr(lenv* e, lval* v) {
         return lval_err("S-expression should start with a %s not a %s",
                         ltype_name(LVAL_FUN), ltype_name(f->type));
     }
-    lval* result = f->fun(e, v);
+    lval* result = lval_call(e, f, v);
     lval_delete(f);
     return result;
 }
@@ -235,6 +262,37 @@ lval* lval_eval(lenv* e, lval* v) {
         return lval_eval_sexpr(e, v);
     }
     return v;
+}
+
+lval* lval_call(lenv* e, lval* f, lval* a) {
+    if (f->builtin) {
+        return f->builtin(e, a);
+    }
+
+    int given = a->count;
+    int total = f->formals->count;
+
+    while(a->count) {
+        if (f->formals->count == 0) {
+            lval_delete(a);
+            return lval_err("Function passed too many arguments." \
+                            " Got %i, Expected %i",
+                            given, total);
+        }
+        lval* sym = lval_pop(f->formals, 0);
+        lval* val = lval_pop(a, 0);
+
+        lenv_put(f->env, sym, val);
+        lval_delete(sym);
+        lval_delete(val);
+    }
+
+    lval_delete(a);
+    if (f->formals->count == 0) {
+        f->env->par = e;
+        return builtin_eval(f->env, lval_add(lval_sexpr(), lval_copy(f->body)));
+    }
+    return lval_copy(f);
 }
 
 lval* lval_pop(lval* v, int i) {
@@ -405,7 +463,7 @@ lval* builtin_init(lenv* e, lval* a) {
     return v;
 }
 
-lval* builtin_def(lenv* e, lval* a) {
+lval* builtin_var(lenv* e, lval* a, char* func) {
     LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
             "def requires a %s not a %s",
             ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
@@ -421,8 +479,40 @@ lval* builtin_def(lenv* e, lval* a) {
             "def cannot define incorrect number of values to symbols");
 
     for (int i = 0; i < syms->count; i++) {
-        lenv_put(e, syms->cell[i], a->cell[i + 1]);
+        if (strcmp(func, "def")) {
+            lenv_def(e, syms->cell[i], a->cell[i + 1]);
+        }
+        else if (strcmp(func, "=")) {
+            lenv_put(e, syms->cell[i], a->cell[i + 1]);
+        }
     }
     lval_delete(a);
     return lval_sexpr();
+}
+
+lval* builtin_def (lenv* e, lval* a) {
+    return builtin_var(e, a, "def");
+}
+
+lval* builtin_put (lenv* e, lval* a) {
+    return builtin_var(e, a, "=");
+}
+
+lval* builtin_lambda(lenv* e, lval* a) {
+    LASSERT_SIZE(a, 2, "Lambda not passed two arguments. Passed %d", a->count);
+    LASSERT_ARG_TYPE(a, 0, LVAL_QEXPR,
+                     "Lambda first argument isn't %s. It is %s",
+                     ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
+    LASSERT_ARG_TYPE(a, 1, LVAL_QEXPR,
+                     "Lambda second argument isn't %s. It is %s",
+                     ltype_name(LVAL_QEXPR), ltype_name(a->cell[1]->type));
+    for (int i = 0; i < a->cell[0]->count; i++) {
+        LASSERT(a, (a->cell[0]->cell[i]->type == LVAL_SYM),
+                "Cannot define non-symbol. Got %s, Expected %s.",
+                ltype_name(a->cell[0]->cell[i]->type), ltype_name(LVAL_SYM));
+    }
+
+    lval* formals = lval_pop(a, 0);
+    lval* body = lval_pop(a, 0);
+    return lval_lambda(formals, body);
 }

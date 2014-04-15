@@ -17,6 +17,11 @@
         lval_delete(args);                                    \
         return lval_err(fmt, ##__VA_ARGS__);                  \
     }
+#define LASSERT_ARG_TYPE(args, pos, expected_type, fmt, ...)      \
+    if (args->cell[pos]->type != expected_type) {                 \
+        lval_delete(args);                                        \
+        return lval_err(fmt, ##__VA_ARGS__);                      \
+    }
 
 enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
 
@@ -31,7 +36,10 @@ struct lval {
     char* err;
     char* sym;
 
-    lbuiltin fun;
+    lbuiltin builtin;
+    lenv* env;
+    lval* formals;
+    lval* body;
 
     // List of lvals
     struct lval** cell;
@@ -44,6 +52,7 @@ lval* lval_sym(char* s);
 lval* lval_sexpr(void);
 lval* lval_qexpr(void);
 lval* lval_fun(lbuiltin func);
+lval* lval_lambda(lval* formals, lval* body);
 
 lval* lval_read(mpc_ast_t* t);
 void lval_println(lenv* e, lval* v);
@@ -52,6 +61,7 @@ void lval_delete(lval* v);
 lval* lval_copy(lval* v);
 
 lval* lval_eval(lenv *e, lval* v);
+lval* lval_call(lenv* e, lval* f, lval* a);
 lval* lval_take(lval* v, int i);
 lval* lval_pop(lval* v, int i);
 lval* lval_add(lval* v, lval* x);
@@ -68,6 +78,8 @@ lval* builtin_add(lenv* e, lval* a);
 lval* builtin_sub(lenv* e, lval* a);
 lval* builtin_mul(lenv* e, lval* a);
 lval* builtin_div(lenv* e, lval* a);
+lval* builtin_lambda(lenv* e, lval* a);
 lval* builtin_def(lenv* e, lval* a);
+lval* builtin_put(lenv* e, lval* a);
 
 char* ltype_name(int t);

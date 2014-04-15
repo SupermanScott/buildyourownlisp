@@ -423,6 +423,47 @@ MU_TEST(test_lval_def_multiple_eval) {
     lenv_delete(e);
 }
 
+MU_TEST(test_lval_lambda_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* val = lval_sexpr();
+    lval* body = lval_qexpr();
+    body = lval_add(body, lval_sym("+"));
+    body = lval_add(body, lval_sym("x"));
+    body = lval_add(body, lval_num(1));
+
+    lval* args = lval_qexpr();
+    args = lval_add(args, lval_sym("x"));
+
+    val = lval_add(val, args);
+    val = lval_add(val, body);
+
+    lval* result = builtin_lambda(e, val);
+
+    mu_assert(result->type == LVAL_FUN,
+              "Creating a lambda should result in a function type.");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_lambda_size) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* val = lval_sexpr();
+
+    lval* args = lval_qexpr();
+    args = lval_add(args, lval_sym("x"));
+
+    val = lval_add(val, args);
+
+    lval* result = builtin_lambda(e, val);
+
+    mu_assert(result->type == LVAL_ERR,
+              "Creating a lambda without a body should create an error");
+    lval_delete(result);
+}
+
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
@@ -446,6 +487,8 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_init_non_qexpr);
     MU_RUN_TEST(test_lval_def_success);
     MU_RUN_TEST(test_lval_def_multiple_eval);
+    MU_RUN_TEST(test_lval_lambda_success);
+    MU_RUN_TEST(test_lval_lambda_size);
 }
 
 MU_TEST(test_lval_copy_num) {
