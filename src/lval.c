@@ -280,11 +280,25 @@ lval* lval_call(lenv* e, lval* f, lval* a) {
                             given, total);
         }
         lval* sym = lval_pop(f->formals, 0);
-        lval* val = lval_pop(a, 0);
+        if (strcmp("&", sym->sym) == 0) {
+            if (f->formals->count != 1) {
+                lval_delete(a);
+                return lval_err("Function format invalid. Symbol '&' not " \
+                                "followed by single symbol");
+            }
+            lval* nsym = lval_pop(f->formals, 0);
+            lenv_put(f->env, nsym, builtin_list(e, a));
+            lval_delete(nsym);
+            lval_delete(sym);
+            break;
+        }
+        else {
+            lval* val = lval_pop(a, 0);
 
-        lenv_put(f->env, sym, val);
-        lval_delete(sym);
-        lval_delete(val);
+            lenv_put(f->env, sym, val);
+            lval_delete(sym);
+            lval_delete(val);
+        }
     }
 
     lval_delete(a);
@@ -292,6 +306,24 @@ lval* lval_call(lenv* e, lval* f, lval* a) {
         f->env->par = e;
         return builtin_eval(f->env, lval_add(lval_sexpr(), lval_copy(f->body)));
     }
+    else if (strcmp(f->formals->cell[0]->sym, "&") == 0) {
+        // Only remaining formals is &xs. Because &xs is optional, this means
+        // that this should be evaluated.
+        if (f->formals->count != 2) {
+            return lval_err("Function format invalid. Symbol '&' not followed "\
+                            "by single symbol.");
+        }
+
+        // Delete the & symbol
+        lval_delete(lval_pop(f->formals, 0));
+        lval* sym = lval_pop(f->formals, 0);
+        lval* val = lval_qexpr();
+        lenv_put(f->env, sym, val);
+        lval_delete(sym);
+        lval_delete(val);
+        return builtin_eval(f->env, lval_add(lval_sexpr(), lval_copy(f->body)));
+    }
+
     return lval_copy(f);
 }
 

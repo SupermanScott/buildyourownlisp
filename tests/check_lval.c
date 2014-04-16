@@ -464,6 +464,40 @@ MU_TEST(test_lval_lambda_size) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_lambda_optional) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* val = lval_sexpr();
+    lval* body = lval_qexpr();
+    body = lval_add(body, lval_sym("xs"));
+
+    lval* args = lval_qexpr();
+    args = lval_add(args, lval_sym("&"));
+    args = lval_add(args, lval_sym("xs"));
+
+    val = lval_add(val, args);
+    val = lval_add(val, body);
+
+    lval* result = builtin_lambda(e, val);
+
+    lval* invoke = lval_sexpr();
+    invoke = lval_add(invoke, result);
+    invoke = lval_add(invoke, lval_num(1));
+    invoke = lval_add(invoke, lval_num(100));
+
+    lval* final_result = lval_eval(e, invoke);
+
+    mu_assert(final_result->type == LVAL_QEXPR,
+              "Optional arguments should be returned");
+    mu_assert(final_result->cell[0]->num == 1,
+              "Result should have 1 as the first element");
+    mu_assert(final_result->cell[1]->num == 100,
+              "Result should have 100 as the second element");
+
+    lval_delete(final_result);
+}
+
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
@@ -489,6 +523,7 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_def_multiple_eval);
     MU_RUN_TEST(test_lval_lambda_success);
     MU_RUN_TEST(test_lval_lambda_size);
+    MU_RUN_TEST(test_lval_lambda_optional);
 }
 
 MU_TEST(test_lval_copy_num) {
