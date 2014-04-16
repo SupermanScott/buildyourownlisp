@@ -548,3 +548,22 @@ lval* builtin_lambda(lenv* e, lval* a) {
     lval* body = lval_pop(a, 0);
     return lval_lambda(formals, body);
 }
+
+lval* builtin_fun(lenv* e, lval* a) {
+    LASSERT_SIZE(a, 2, "Lambda not passed two arguments. Passed %d", a->count);
+    LASSERT_ARG_TYPE(a, 0, LVAL_QEXPR,
+                     "Lambda first argument isn't %s. It is %s",
+                     ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
+    LASSERT_ARG_TYPE(a, 1, LVAL_QEXPR,
+                     "Lambda second argument isn't %s. It is %s",
+                     ltype_name(LVAL_QEXPR), ltype_name(a->cell[1]->type));
+    lval* args = lval_pop(a, 0);
+    lval* name = lval_pop(args, 0);
+    lval* body = lval_pop(a, 0);
+
+    lval* func = lval_lambda(args, body);
+    lenv_def(e, name, func);
+
+    lval_delete(a);
+    return func;
+}

@@ -498,6 +498,33 @@ MU_TEST(test_lval_lambda_optional) {
     lval_delete(final_result);
 }
 
+MU_TEST(test_lval_func_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* val = lval_sexpr();
+    lval* args = lval_qexpr();
+    args = lval_add(args, lval_sym("add-together"));
+    args = lval_add(args, lval_sym("x"));
+    args = lval_add(args, lval_sym("y"));
+
+    lval* body = lval_qexpr();
+    body = lval_add(body, lval_sym("+"));
+    body = lval_add(body, lval_sym("x"));
+    body = lval_add(body, lval_sym("y"));
+
+    val = lval_add(val, args);
+    val = lval_add(val, body);
+
+    lval* result = builtin_fun(e, val);
+
+    mu_assert(result->type == LVAL_FUN,
+              "Defining a func should result in a fun coming back");
+    lval* stored = lenv_get(e, lval_sym("add-together"));
+    mu_assert(stored->type == LVAL_FUN,
+              "Getting add-together from env should result in a fun");
+}
+
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
@@ -524,6 +551,7 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_lambda_success);
     MU_RUN_TEST(test_lval_lambda_size);
     MU_RUN_TEST(test_lval_lambda_optional);
+    MU_RUN_TEST(test_lval_func_success);
 }
 
 MU_TEST(test_lval_copy_num) {

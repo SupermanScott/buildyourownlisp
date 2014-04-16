@@ -81,5 +81,6 @@ lval* builtin_div(lenv* e, lval* a);
 lval* builtin_lambda(lenv* e, lval* a);
 lval* builtin_def(lenv* e, lval* a);
 lval* builtin_put(lenv* e, lval* a);
+lval* builtin_fun(lenv* e, lval* a);
 
 char* ltype_name(int t);
