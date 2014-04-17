@@ -648,3 +648,30 @@ lval* builtin_cmp(lenv* e, lval* a, char* op) {
 
 lval* builtin_eq(lenv* e, lval* a) { return builtin_cmp(e, a, "=="); }
 lval* builtin_ne(lenv* e, lval* a) { return builtin_cmp(e, a, "!="); }
+
+lval* builtin_if(lenv* e, lval* a) {
+    LASSERT_SIZE(a, 3, "If requires three arguments. One for condition, one "\
+                 "for if condition is True and finally one for if condition "\
+                 "is false");
+    LASSERT_ARG_TYPE(a, 0, LVAL_NUM,
+                     "First argument to If must evaluate to a %s",
+                     ltype_name(LVAL_NUM));
+    LASSERT_ARG_TYPE(a, 1, LVAL_QEXPR,
+                     "Second argument to If must be a %s",
+                     ltype_name(LVAL_QEXPR));
+    LASSERT_ARG_TYPE(a, 2, LVAL_QEXPR,
+                     "Third argument to If must be a %s",
+                     ltype_name(LVAL_QEXPR));
+    a->cell[1]->type = LVAL_SEXPR;
+    a->cell[2]->type = LVAL_SEXPR;
+
+    lval* x = NULL;
+    if (a->cell[0]->num) {
+        x = lval_eval(e, lval_pop(a, 1));
+    }
+    else {
+        x = lval_eval(e, lval_pop(a, 2));
+    }
+    lval_delete(a);
+    return x;
+}

@@ -766,6 +766,34 @@ MU_TEST(test_lval_ne_success) {
     lval_delete(num_check);
 }
 
+MU_TEST(test_lval_if_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* a = lval_sexpr();
+    a = lval_add(a, lval_num(1));
+    a = lval_add(a, lval_add(lval_qexpr(), lval_num(100)));
+    a = lval_add(a, lval_add(lval_qexpr(), lval_num(200)));
+    lval* true_result = builtin_if(e, a);
+    lval_println(e, true_result);
+    mu_assert(true_result->type == LVAL_NUM,
+              "(if 1 {100} {200}) should result in a LVAL_NUM");
+    mu_assert(true_result->num == 100,
+              "(if 1 {100} {200}) should result in 100");
+    lval_delete(true_result);
+
+    lval* args = lval_sexpr();
+    args = lval_add(args, lval_num(0));
+    args = lval_add(args, lval_add(lval_qexpr(), lval_num(100)));
+    args = lval_add(args, lval_add(lval_qexpr(), lval_num(200)));
+    lval* false_result = builtin_if(e, args);
+    mu_assert(false_result->type == LVAL_NUM,
+              "(if 0 {100} {200}) should result in a LVAL_NUM");
+    mu_assert(false_result->num == 200,
+              "(if 0 {100} {200}) should result in 200");
+    lval_delete(false_result);
+}
+
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
@@ -799,6 +827,7 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_gte);
     MU_RUN_TEST(test_lval_eq_success);
     MU_RUN_TEST(test_lval_ne_success);
+    MU_RUN_TEST(test_lval_if_success);
 }
 
 MU_TEST(test_lval_copy_num) {
