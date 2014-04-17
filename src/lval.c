@@ -703,3 +703,20 @@ lval* builtin_and(lenv* e, lval* a) {
     lval_delete(a);
     return lval_num(1);
 }
+
+lval* builtin_not(lenv* e, lval* a) {
+    LASSERT_SIZE(a, 1, "Not only accepts one argument");
+    LASSERT_ARG_TYPE(a, 0, LVAL_NUM,
+                     "First argument to not must be a %s not a %s",
+                     ltype_name(LVAL_NUM), ltype_name(a->cell[0]->type));
+
+    lval* v = NULL;
+    if (a->cell[0]->num > 0) {
+        v = lval_num(0);
+    }
+    else {
+        v = lval_num(1);
+    }
+    lval_delete(a);
+    return v;
+}

@@ -91,5 +91,6 @@ lval* builtin_ne(lenv* e, lval* a);
 lval* builtin_if(lenv* e, lval* a);
 lval* builtin_or(lenv* e, lval* a);
 lval* builtin_and(lenv* e, lval* a);
+lval* builtin_not(lenv* e, lval* a);
 
 char* ltype_name(int t);

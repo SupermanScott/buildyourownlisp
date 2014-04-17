@@ -894,6 +894,27 @@ MU_TEST(test_lval_and_fail_multiple) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_not_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* t = lval_sexpr();
+    t = lval_add(t, lval_num(0));
+
+    lval* result = builtin_not(e, t);
+    mu_assert(result->type == LVAL_NUM,
+              "Calling (not 0) should result in a LVAL_NUM");
+    mu_assert(result->num == 1,
+              "Calling (not 0) should result in 1");
+
+    lval_delete(result);
+
+    lval* failure_result = builtin_not(e, lval_add(lval_sexpr(), lval_num(1)));
+    mu_assert(failure_result->type == LVAL_NUM,
+              "Calling (not 1) should result in a LVAL_NUM");
+    mu_assert(failure_result->num == 0,
+              "Calling (not 1) should result in 0");
+}
 
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
@@ -935,6 +956,7 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_and_success);
     MU_RUN_TEST(test_lval_and_success_multiple);
     MU_RUN_TEST(test_lval_and_fail_multiple);
+    MU_RUN_TEST(test_lval_not_success);
 }
 
 MU_TEST(test_lval_copy_num) {
