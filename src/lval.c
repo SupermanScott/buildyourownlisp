@@ -706,3 +706,34 @@ lval* builtin_or(lenv* e, lval* a) {
     lval_delete(a);
     return lval_eval(e, false_expr);
 }
+
+lval* builtin_and(lenv* e, lval* a) {
+    LASSERT(a, (a->count >= 3),
+            "And function requires at least one condition and two qexpr to "\
+            "execute. The first qexpr if a condition is true and the second " \
+            "is for when none of the conditions are true");
+    LASSERT(a, (a->cell[a->count - 2]->type == LVAL_QEXPR),
+            "Second to last argument must be a qexpr that will be evaluated "\
+            "if any of the conditions are true");
+    LASSERT(a, (a->cell[a->count - 1]->type == LVAL_QEXPR),
+            "Last argument must be a qexpr that will be evaluated when none "\
+            "of the conditions are true");
+
+    lval* false_expr = lval_pop(a, a->count - 1);
+    lval* true_expr = lval_pop(a, a->count - 1);
+
+    false_expr->type = LVAL_SEXPR;
+    true_expr->type = LVAL_SEXPR;
+
+    for (int i = 0; i < a->count; i++) {
+        LASSERT_ARG_TYPE(a, i, LVAL_NUM,
+                         "Condition %i does not evaluate to a %s but a %s",
+                         i, ltype_name(LVAL_NUM), ltype_name(a->cell[i]->type));
+        if (a->cell[i]->num == 0) {
+            lval_delete(a);
+            return lval_eval(e, false_expr);
+        }
+    }
+    lval_delete(a);
+    return lval_eval(e, true_expr);
+}
