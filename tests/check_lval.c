@@ -525,6 +525,160 @@ MU_TEST(test_lval_func_success) {
               "Getting add-together from env should result in a fun");
 }
 
+MU_TEST(test_lval_gt) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* comp = lval_sexpr();
+    comp = lval_add(comp, lval_num(1));
+    comp = lval_add(comp, lval_num(2));
+
+    lval* result = builtin_gt(e, comp);
+    mu_assert(result->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result->num == 0,
+              "1 > 2 should return False");
+    lval_delete(result);
+
+    lval* comp_lt = lval_sexpr();
+    comp = lval_add(comp_lt, lval_num(2));
+    comp = lval_add(comp_lt, lval_num(1));
+
+    lval* result_lt = builtin_gt(e, comp);
+    mu_assert(result_lt->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_lt->num > 0,
+              "2 > 1 should return True");
+    lval_delete(result_lt);
+
+    lval* comp_eq = lval_sexpr();
+    comp = lval_add(comp_eq, lval_num(2));
+    comp = lval_add(comp_eq, lval_num(2));
+
+    lval* result_eq = builtin_gt(e, comp);
+    mu_assert(result_eq->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_eq->num == 0,
+              "2 > 2 should return False");
+    lval_delete(result_eq);
+
+}
+
+MU_TEST(test_lval_lt) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* comp = lval_sexpr();
+    comp = lval_add(comp, lval_num(1));
+    comp = lval_add(comp, lval_num(2));
+
+    lval* result = builtin_lt(e, comp);
+    mu_assert(result->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result->num > 0,
+              "1 < 2 should return True");
+    lval_delete(result);
+
+    lval* comp_lt = lval_sexpr();
+    comp = lval_add(comp_lt, lval_num(2));
+    comp = lval_add(comp_lt, lval_num(1));
+
+    lval* result_lt = builtin_lt(e, comp);
+    mu_assert(result_lt->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_lt->num == 0,
+              "2 < 1 should return False");
+    lval_delete(result_lt);
+
+    lval* comp_eq = lval_sexpr();
+    comp = lval_add(comp_eq, lval_num(2));
+    comp = lval_add(comp_eq, lval_num(2));
+
+    lval* result_eq = builtin_lt(e, comp);
+    mu_assert(result_eq->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_eq->num == 0,
+              "2 < 2 should return False");
+    lval_delete(result_eq);
+}
+
+MU_TEST(test_lval_lte) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* comp = lval_sexpr();
+    comp = lval_add(comp, lval_num(1));
+    comp = lval_add(comp, lval_num(2));
+
+    lval* result = builtin_le(e, comp);
+    mu_assert(result->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result->num > 0,
+              "1 <= 2 should return True");
+    lval_delete(result);
+
+    lval* comp_lt = lval_sexpr();
+    comp = lval_add(comp_lt, lval_num(2));
+    comp = lval_add(comp_lt, lval_num(1));
+
+    lval* result_lt = builtin_le(e, comp);
+    mu_assert(result_lt->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_lt->num == 0,
+              "2 <= 1 should return False");
+    lval_delete(result_lt);
+
+    lval* comp_eq = lval_sexpr();
+    comp = lval_add(comp_eq, lval_num(2));
+    comp = lval_add(comp_eq, lval_num(2));
+
+    lval* result_eq = builtin_le(e, comp);
+    mu_assert(result_eq->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_eq->num > 0,
+              "2 <= 2 should return True");
+    lval_delete(result_eq);
+}
+
+MU_TEST(test_lval_gte) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* comp = lval_sexpr();
+    comp = lval_add(comp, lval_num(1));
+    comp = lval_add(comp, lval_num(2));
+
+    lval* result = builtin_ge(e, comp);
+    mu_assert(result->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result->num == 0,
+              "1 >= 2 should return False");
+    lval_delete(result);
+
+    lval* comp_lt = lval_sexpr();
+    comp = lval_add(comp_lt, lval_num(2));
+    comp = lval_add(comp_lt, lval_num(1));
+
+    lval* result_lt = builtin_ge(e, comp);
+    mu_assert(result_lt->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_lt->num > 0,
+              "2 >= 1 should return True");
+    lval_delete(result_lt);
+
+    lval* comp_eq = lval_sexpr();
+    comp = lval_add(comp_eq, lval_num(2));
+    comp = lval_add(comp_eq, lval_num(2));
+
+    lval* result_eq = builtin_ge(e, comp);
+    mu_assert(result_eq->type == LVAL_NUM,
+              "Comparing two numbers should return a LVAL_NUM");
+    mu_assert(result_eq->num > 0,
+              "2 >= 2 should return True");
+    lval_delete(result_eq);
+}
+
+
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
     MU_RUN_TEST(test_lval_list_success);
@@ -552,6 +706,10 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_lambda_size);
     MU_RUN_TEST(test_lval_lambda_optional);
     MU_RUN_TEST(test_lval_func_success);
+    MU_RUN_TEST(test_lval_gt);
+    MU_RUN_TEST(test_lval_lt);
+    MU_RUN_TEST(test_lval_lte);
+    MU_RUN_TEST(test_lval_gte);
 }
 
 MU_TEST(test_lval_copy_num) {

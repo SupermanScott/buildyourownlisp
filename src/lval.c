@@ -567,3 +567,26 @@ lval* builtin_fun(lenv* e, lval* a) {
     lval_delete(a);
     return func;
 }
+
+lval* builtin_ord(lenv* e, lval* a, char* op) {
+    LASSERT_SIZE(a, 2, "Executing %s requires two %s",
+                 op, ltype_name(LVAL_NUM));
+    LASSERT_ARG_TYPE(a, 0, LVAL_NUM,
+                     "First argument to %s need to be a %s not a %s",
+                     op, ltype_name(LVAL_NUM), ltype_name(a->cell[0]->type));
+    LASSERT_ARG_TYPE(a, 1, LVAL_NUM,
+                     "Second argument to %s need to be a %s not a %s",
+                     op, ltype_name(LVAL_NUM), ltype_name(a->cell[1]->type));
+    int r;
+    if (strcmp(op, ">")  == 0) { r = (a->cell[0]->num >  a->cell[1]->num); }
+    if (strcmp(op, "<")  == 0) { r = (a->cell[0]->num <  a->cell[1]->num); }
+    if (strcmp(op, ">=") == 0) { r = (a->cell[0]->num >= a->cell[1]->num); }
+    if (strcmp(op, "<=") == 0) { r = (a->cell[0]->num <= a->cell[1]->num); }
+    lval_delete(a);
+    return lval_num(r);
+}
+
+lval* builtin_gt(lenv* e, lval* a) { return builtin_ord(e, a, ">");  }
+lval* builtin_lt(lenv* e, lval* a) { return builtin_ord(e, a, "<");  }
+lval* builtin_ge(lenv* e, lval* a) { return builtin_ord(e, a, ">="); }
+lval* builtin_le(lenv* e, lval* a) { return builtin_ord(e, a, "<="); }
