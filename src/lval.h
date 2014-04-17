@@ -86,5 +86,7 @@ lval* builtin_gt(lenv* e, lval* a);
 lval* builtin_lt(lenv* e, lval* a);
 lval* builtin_ge(lenv* e, lval* a);
 lval* builtin_le(lenv* e, lval* a);
+lval* builtin_eq(lenv* e, lval* a);
+lval* builtin_ne(lenv* e, lval* a);
 
 char* ltype_name(int t);

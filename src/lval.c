@@ -352,6 +352,38 @@ lval* lval_join(lval* x, lval* y) {
     return x;
 }
 
+int lval_eq(lval* x, lval* y) {
+    if (x->type != y->type) {
+        return 0;
+    }
+    switch (x->type) {
+    case LVAL_NUM:
+        return x->num == y->num;
+    case LVAL_ERR:
+        return (strcmp(x->err, y->err) == 0);
+    case LVAL_SYM:
+        return (strcmp(x->sym, y->sym) == 0);
+    case LVAL_FUN:
+        if (y->builtin || x->builtin) {
+            return y->builtin == x->builtin;
+        }
+        return lval_eq(y->formals, x->formals) && \
+            lval_eq(y->body, x->body);
+    case LVAL_SEXPR:
+    case LVAL_QEXPR:
+        if (x->count != y->count) {
+            return 0;
+        }
+        for (int i = 0; i < x->count; i++) {
+            if (lval_eq(x->cell[i], y->cell[i]) == 0) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+    return 0;
+}
+
 lval* builtin_op(lenv* e, lval* v, char* op) {
     for (int i = 0; i < v->count; i++) {
         LASSERT(v, (v->cell[i]->type == LVAL_NUM),
@@ -590,3 +622,29 @@ lval* builtin_gt(lenv* e, lval* a) { return builtin_ord(e, a, ">");  }
 lval* builtin_lt(lenv* e, lval* a) { return builtin_ord(e, a, "<");  }
 lval* builtin_ge(lenv* e, lval* a) { return builtin_ord(e, a, ">="); }
 lval* builtin_le(lenv* e, lval* a) { return builtin_ord(e, a, "<="); }
+
+lval* builtin_cmp(lenv* e, lval* a, char* op) {
+    LASSERT_SIZE(a, 2, "Comparison operator %s requires two arguments not %i",
+                 op, a->count);
+    int r = -1;
+    if (strcmp(op, "==") == 0) {
+        r = lval_eq(a->cell[0], a->cell[1]);
+    }
+    else if (strcmp(op, "!=") == 0) {
+        r = ! lval_eq(a->cell[0], a->cell[1]);
+    }
+
+    lval* val = NULL;
+    if (r == -1) {
+        val = lval_err("Comparison operator %s isn't defined", op);
+    }
+    else {
+        val = lval_num(r);
+    }
+
+    lval_delete(a);
+    return val;
+}
+
+lval* builtin_eq(lenv* e, lval* a) { return builtin_cmp(e, a, "=="); }
+lval* builtin_ne(lenv* e, lval* a) { return builtin_cmp(e, a, "!="); }

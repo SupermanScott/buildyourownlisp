@@ -678,6 +678,93 @@ MU_TEST(test_lval_gte) {
     lval_delete(result_eq);
 }
 
+MU_TEST(test_lval_eq_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+
+    lval* not_same_type = builtin_eq(e,
+                                     lval_add(lval_add(lval_sexpr(), lval_num(1)),
+                                              lval_sym("sup")));
+    mu_assert(not_same_type->type == LVAL_NUM,
+              "When comparing 1 and symbol 'sup', eq should return a number");
+    mu_assert(not_same_type->num == 0,
+              "Comparing 1 and symbol 'sup' should result in False");
+    lval_delete(not_same_type);
+
+    lval* num_check = builtin_eq(e,
+                                 lval_add(lval_add(lval_sexpr(), lval_num(1)),
+                                          lval_num(1)));
+    mu_assert(num_check->type == LVAL_NUM,
+              "When comparing 1 and 1, eq should return a number");
+    mu_assert(num_check->num == 1,
+              "Comparing 1 and 1 should result in True");
+    lval_delete(num_check);
+
+    lval* err_check = builtin_eq(e,
+                                 lval_add(lval_add(lval_sexpr(), lval_err("sup")),
+                                          lval_err("sup")));
+    mu_assert(err_check->type == LVAL_NUM,
+              "When comparing two errors, eq should return a LVAL_NUM");
+    mu_assert(err_check->num == 1,
+              "Comparing two errors of 'sup' should return True");
+    lval_delete(err_check);
+
+    lval* sym_check = builtin_eq(e,
+                                 lval_add(lval_add(lval_sexpr(), lval_sym("sup")),
+                                          lval_sym("sup")));
+    mu_assert(sym_check->type == LVAL_NUM,
+              "When comparing two syms, eq should return a LVAL_NUM");
+    mu_assert(sym_check->num == 1,
+              "Comparing two syms of 'sup' should return True");
+    lval_delete(sym_check);
+
+    lval* builtin_check = builtin_eq(e,
+                                 lval_add(lval_add(lval_sexpr(),
+                                                   lenv_get(e, lval_sym("+"))),
+                                          lenv_get(e, lval_sym("+"))));
+    mu_assert(builtin_check->type == LVAL_NUM,
+              "When comparing two copies of builtin_add, eq should return a"\
+              " LVAL_NUM");
+    mu_assert(builtin_check->num == 1,
+              "Comparing two copies of builtin_add, eq should return True");
+    lval_delete(builtin_check);
+
+    // Comparing lval_lambda's also test the logic for qexpr. Which also
+    // happens to be the same logic for sexpr. So three birds, one stone.
+    lval* args = lval_qexpr();
+    args = lval_add(args, lval_sym("add-together"));
+    args = lval_add(args, lval_sym("x"));
+    args = lval_add(args, lval_sym("y"));
+
+    lval* body = lval_qexpr();
+    body = lval_add(body, lval_sym("+"));
+    body = lval_add(body, lval_sym("x"));
+    body = lval_add(body, lval_sym("y"));
+    lval* lambda_check = builtin_eq(e,
+                                 lval_add(lval_add(lval_sexpr(),
+                                                   lval_lambda(lval_copy(args),
+                                                               lval_copy(body))),
+                                          lval_lambda(args, body)));
+    mu_assert(lambda_check->type == LVAL_NUM,
+              "When comparing two equivalent lambdas, eq should return a"\
+              " LVAL_NUM");
+    mu_assert(lambda_check->num == 1,
+              "Comparing two equivalent lambdas eq should return True");
+    lval_delete(lambda_check);
+}
+
+MU_TEST(test_lval_ne_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* num_check = builtin_ne(e,
+                                 lval_add(lval_add(lval_sexpr(), lval_num(1)),
+                                          lval_num(1)));
+    mu_assert(num_check->type == LVAL_NUM,
+              "When comparing 1 and 1, eq should return a number");
+    mu_assert(num_check->num == 0,
+              "Comparing 1 and 1 ne should result in False");
+    lval_delete(num_check);
+}
 
 MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_cons);
@@ -710,6 +797,8 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_lt);
     MU_RUN_TEST(test_lval_lte);
     MU_RUN_TEST(test_lval_gte);
+    MU_RUN_TEST(test_lval_eq_success);
+    MU_RUN_TEST(test_lval_ne_success);
 }
 
 MU_TEST(test_lval_copy_num) {
