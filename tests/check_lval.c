@@ -775,7 +775,6 @@ MU_TEST(test_lval_if_success) {
     a = lval_add(a, lval_add(lval_qexpr(), lval_num(100)));
     a = lval_add(a, lval_add(lval_qexpr(), lval_num(200)));
     lval* true_result = builtin_if(e, a);
-    lval_println(e, true_result);
     mu_assert(true_result->type == LVAL_NUM,
               "(if 1 {100} {200}) should result in a LVAL_NUM");
     mu_assert(true_result->num == 100,
@@ -792,6 +791,89 @@ MU_TEST(test_lval_if_success) {
     mu_assert(false_result->num == 200,
               "(if 0 {100} {200}) should result in 200");
     lval_delete(false_result);
+}
+
+MU_TEST(test_lval_or_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* true_expr = lval_num(1);
+    lval* false_expr = lval_num(-1);
+
+    lval* condition = lval_num(1);
+    lval* t = lval_sexpr();
+    t = lval_add(t, condition);
+    t = lval_add(t, lval_add(lval_qexpr(), true_expr));
+    t = lval_add(t, lval_add(lval_qexpr(), false_expr));
+
+    lval* result = builtin_or(e, t);
+
+    mu_assert(result->type == LVAL_NUM,
+              "(or 1 {1} {-1}) should return an LVAL_NUM");
+    mu_assert(result->num == 1,
+              "(or 1 {1} {-1}) should return 1");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_or_fail) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* true_expr = lval_num(1);
+    lval* false_expr = lval_num(-1);
+
+    lval* condition = lval_num(0);
+    lval* t = lval_sexpr();
+    t = lval_add(t, condition);
+    t = lval_add(t, lval_add(lval_qexpr(), true_expr));
+    t = lval_add(t, lval_add(lval_qexpr(), false_expr));
+
+    lval* result = builtin_or(e, t);
+
+    mu_assert(result->type == LVAL_NUM,
+              "(or 1 {1} {-1}) should return an LVAL_NUM");
+    mu_assert(result->num == -1,
+              "(or 0 {1} {-1}) should return -1");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_or_fail_then_success) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* true_expr = lval_num(1);
+    lval* false_expr = lval_num(-1);
+
+    lval* t = lval_sexpr();
+    t = lval_add(t, lval_num(0));
+    t = lval_add(t, lval_num(1));
+    t = lval_add(t, lval_add(lval_qexpr(), true_expr));
+    t = lval_add(t, lval_add(lval_qexpr(), false_expr));
+
+    lval* result = builtin_or(e, t);
+
+    mu_assert(result->type == LVAL_NUM,
+              "(or 1 {1} {-1}) should return an LVAL_NUM");
+    mu_assert(result->num == 1,
+              "(or 0 1 {1} {-1}) should return 1");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_or_bad_true_expr) {
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* true_expr = lval_num(1);
+    lval* false_expr = lval_num(-1);
+
+    lval* condition = lval_num(0);
+    lval* t = lval_sexpr();
+    t = lval_add(t, condition);
+    t = lval_add(t, true_expr);
+    t = lval_add(t, lval_add(lval_qexpr(), false_expr));
+
+    lval* result = builtin_or(e, t);
+
+    mu_assert(result->type == LVAL_ERR,
+              "(or 1 1 {-1}) should return an LVAL_ERR. True expression "\
+              "must be a qexpr");
+    lval_delete(result);
 }
 
 MU_TEST_SUITE(builtin_suite) {
@@ -828,6 +910,10 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_eq_success);
     MU_RUN_TEST(test_lval_ne_success);
     MU_RUN_TEST(test_lval_if_success);
+    MU_RUN_TEST(test_lval_or_success);
+    MU_RUN_TEST(test_lval_or_fail);
+    MU_RUN_TEST(test_lval_or_fail_then_success);
+    MU_RUN_TEST(test_lval_or_bad_true_expr);
 }
 
 MU_TEST(test_lval_copy_num) {
