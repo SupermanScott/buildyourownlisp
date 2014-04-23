@@ -761,3 +761,45 @@ lval* builtin_not(lenv* e, lval* a) {
     lval_delete(a);
     return v;
 }
+
+lval* builtin_load(lenv* e, lval* a) {
+    LASSERT_SIZE(a, 1, "Load only accepts one argument");
+    LASSERT_ARG_TYPE(a, 0, LVAL_STR,
+                     "First argument to load must be a %s not a %s",
+                     ltype_name(LVAL_STR), ltype_name(a->cell[0]->type));
+    mpc_result_t r;
+    if (mpc_parse_contents(a->cell[0]->str, Lispy, &r)) {
+        lval* expr = lval_read(r.output);
+        while(expr->count) {
+            lval* x = lval_eval(e, lval_pop(expr, 0));
+            if (x->type == LVAL_ERR) {
+                lval_println(e, x);
+            }
+            lval_delete(x);
+        }
+
+        lval_delete(expr);
+        lval_delete(a);
+        return lval_sexpr();
+    }
+    else {
+        char* err_msg = mpc_err_string(r.error);
+        mpc_err_delete(r.error);
+
+        lval* err = lval_err("Could not load Library %s", err_msg);
+        free(err_msg);
+        lval_delete(a);
+
+        return err;
+    }
+}
+
+lval* builtin_print(lenv* e, lval* a) {
+    for (int i = 0; i < a->count; i++) {
+        lval_print(e, a->cell[i]);
+        putchar(' ');
+    }
+    putchar('\n');
+    lval_delete(a);
+    return lval_sexpr();
+}

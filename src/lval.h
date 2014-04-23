@@ -26,6 +26,15 @@
 enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_STR, LVAL_FUN, LVAL_SEXPR,
        LVAL_QEXPR };
 
+mpc_parser_t* Number;
+mpc_parser_t* Symbol;
+mpc_parser_t* Sexpr;
+mpc_parser_t* Qexpr;
+mpc_parser_t* Expr;
+mpc_parser_t* Lispy;
+mpc_parser_t* String;
+mpc_parser_t* Comment;
+
 typedef lval*(*lbuiltin)(lenv*, lval*);
 
 // Forward declared in lenv.h
@@ -95,5 +104,7 @@ lval* builtin_if(lenv* e, lval* a);
 lval* builtin_or(lenv* e, lval* a);
 lval* builtin_and(lenv* e, lval* a);
 lval* builtin_not(lenv* e, lval* a);
+lval* builtin_load(lenv* e, lval* a);
+lval* builtin_print(lenv* e, lval* a);
 
 char* ltype_name(int t);
