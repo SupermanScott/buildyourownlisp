@@ -35,6 +35,8 @@ int main (int argc, char** argv) {
     mpc_parser_t* Qexpr  = mpc_new("qexpr");
     mpc_parser_t* Expr   = mpc_new("expr");
     mpc_parser_t* Lispy  = mpc_new("lispy");
+    mpc_parser_t* String = mpc_new("string");
+    mpc_parser_t* Comment = mpc_new("comment");
 
     mpca_lang(MPC_LANG_DEFAULT,
   "                                                   \
@@ -42,10 +44,12 @@ int main (int argc, char** argv) {
     symbol : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;       \
     sexpr  : '(' <expr>* ')' ;                        \
     qexpr  : '{' <expr>* '}' ;                        \
-    expr   : <number> | <symbol> | <sexpr> | <qexpr> ;\
+    expr   : <number> | <symbol> | <sexpr> | <qexpr> | <string> | <comment>;\
+    string : /\"(\\\\.|[^\"])*\"/ ;                  \
+    comment: /;[^\\r\\n]*/ ;                         \
     lispy  : /^/ <expr>* /$/ ;               \
   ",
-              Number, Symbol, Sexpr, Expr, Qexpr, Lispy);
+              Number, Symbol, Sexpr, Expr, Qexpr, Lispy, String, Comment);
     puts("Lispy Version 0.0.0.0.1");
     puts("Press Ctrl+C to exit\n");
 
@@ -74,6 +78,6 @@ int main (int argc, char** argv) {
         free(input);
     }
 
-    mpc_cleanup(6, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+    mpc_cleanup(8, Number, Symbol, Sexpr, Qexpr, Expr, Lispy, String, Comment);
     lenv_delete(e);
 }

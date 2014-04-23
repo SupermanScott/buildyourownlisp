@@ -23,7 +23,8 @@
         return lval_err(fmt, ##__VA_ARGS__);                      \
     }
 
-enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_FUN, LVAL_SEXPR, LVAL_QEXPR };
+enum { LVAL_NUM, LVAL_ERR, LVAL_SYM, LVAL_STR, LVAL_FUN, LVAL_SEXPR,
+       LVAL_QEXPR };
 
 typedef lval*(*lbuiltin)(lenv*, lval*);
 
@@ -35,6 +36,7 @@ struct lval {
     // Error and Symbol types have string data
     char* err;
     char* sym;
+    char* str;
 
     lbuiltin builtin;
     lenv* env;
@@ -53,6 +55,7 @@ lval* lval_sexpr(void);
 lval* lval_qexpr(void);
 lval* lval_fun(lbuiltin func);
 lval* lval_lambda(lval* formals, lval* body);
+lval* lval_str(char* s);
 
 lval* lval_read(mpc_ast_t* t);
 void lval_println(lenv* e, lval* v);
