@@ -165,6 +165,20 @@ MU_TEST(test_lval_head_success) {
     lval_delete(result);
 }
 
+MU_TEST(test_lval_head_string_success) {
+    lval* v = lval_sexpr();
+    v = lval_add(v, lval_str("very nice"));
+
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_head(e, v);
+    mu_assert(result->type == LVAL_STR,
+              "Calling head on a String should result in a String");
+    mu_assert(strcmp(result->str, "v") == 0,
+              "Calling head on string \"very nice\" should result in \"v\"");
+    lval_delete(result);
+}
+
 MU_TEST(test_lval_head_too_many_arguments) {
     lval* v = lval_sexpr();
     lval* q = lval_qexpr();
@@ -209,6 +223,20 @@ MU_TEST(test_lval_tail_success) {
               " of size 1");
     mu_assert(result->cell[0]->num == 1,
               "Calling tail on qexpr {10 1} should result in 1");
+    lval_delete(result);
+}
+
+MU_TEST(test_lval_tail_str_success) {
+    lval* v = lval_sexpr();
+    v = lval_add(v, lval_str("very nice"));
+
+    lenv* e = lenv_new();
+    lenv_add_builtins(e);
+    lval* result = builtin_tail(e, v);
+    mu_assert(result->type == LVAL_STR,
+              "Calling tail on a String should result in a string");
+    mu_assert(strcmp(result->str, "ery nice") == 0,
+              "Calling tail on string \"very nice\" should result in \"ery nice\"");
     lval_delete(result);
 }
 
@@ -926,9 +954,11 @@ MU_TEST_SUITE(builtin_suite) {
     MU_RUN_TEST(test_lval_join_success);
     MU_RUN_TEST(test_lval_join_non_qexpr);
     MU_RUN_TEST(test_lval_head_success);
+    MU_RUN_TEST(test_lval_head_string_success);
     MU_RUN_TEST(test_lval_head_too_many_arguments);
     MU_RUN_TEST(test_lval_head_empty_qexpr);
     MU_RUN_TEST(test_lval_tail_success);
+    MU_RUN_TEST(test_lval_tail_str_success);
     MU_RUN_TEST(test_lval_tail_too_many_arguments);
     MU_RUN_TEST(test_lval_tail_empty_qexpr);
     MU_RUN_TEST(test_lval_len_success);

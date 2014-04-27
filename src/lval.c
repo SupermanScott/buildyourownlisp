@@ -488,27 +488,40 @@ lval* builtin_modulo(lenv* e, lval* a) { return builtin_op(e, a, "%"); }
 
 lval* builtin_head(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "Head function passed too many arguments");
-    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
-            "Head function requires a %s not a %s",
-            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
-    LASSERT_NONEMPTY(a, "Head function passed {}");
-
-    lval* v = lval_take(a, 0);
-    while (v->count > 1) {
-        lval_pop(v, 1);
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR || a->cell[0]->type == LVAL_STR),
+            "Head function requires a %s or %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(LVAL_STR),
+            ltype_name(a->cell[0]->type));
+    if (a->cell[0]->type == LVAL_QEXPR) {
+        LASSERT_NONEMPTY(a, "Head function passed {}");
+        lval* v = lval_take(a, 0);
+        while (v->count > 1) {
+            lval_pop(v, 1);
+        }
+        return v;
     }
+    char* head = malloc(1);
+    lval* v = lval_str(strncpy(head, a->cell[0]->str, 1));
+    lval_delete(a);
     return v;
 }
 
 lval* builtin_tail(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "Tail function passed too many arguments");
-    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR),
-            "Tail function requires a %s not a %s",
-            ltype_name(LVAL_QEXPR), ltype_name(a->cell[0]->type));
-    LASSERT_NONEMPTY(a, "Tail function passed {}");
+    LASSERT(a, (a->cell[0]->type == LVAL_QEXPR || a->cell[0]->type == LVAL_STR),
+            "Tail function requires a %s or %s not a %s",
+            ltype_name(LVAL_QEXPR), ltype_name(LVAL_STR),
+            ltype_name(a->cell[0]->type));
+    if (a->cell[0]->type == LVAL_QEXPR) {
+        LASSERT_NONEMPTY(a, "Tail function passed {}");
 
-    lval* v = lval_take(a, 0);
-    lval_delete(lval_pop(v, 0));
+        lval* v = lval_take(a, 0);
+        lval_delete(lval_pop(v, 0));
+        return v;
+    }
+    char* tail = malloc(strlen(a->cell[0]->str));
+    lval* v = lval_str(strcpy(tail, (a->cell[0]->str + 1)));
+    lval_delete(a);
     return v;
 }
 
