@@ -471,6 +471,9 @@ lval* builtin_op(lenv* e, lval* v, char* op) {
                 x->num = x->num / y->num;
             }
         }
+        if (strcmp(op, "%") == 0) {
+            x->num = x->num % y->num;
+        }
         lval_delete(y);
     }
     lval_delete(v);
@@ -481,6 +484,7 @@ lval* builtin_add(lenv* e, lval* a) { return builtin_op(e, a, "+"); }
 lval* builtin_sub(lenv* e, lval* a) { return builtin_op(e, a, "-"); }
 lval* builtin_mul(lenv* e, lval* a) { return builtin_op(e, a, "*"); }
 lval* builtin_div(lenv* e, lval* a) { return builtin_op(e, a, "/"); }
+lval* builtin_modulo(lenv* e, lval* a) { return builtin_op(e, a, "%"); }
 
 lval* builtin_head(lenv* e, lval* a) {
     LASSERT_SIZE(a, 1, "Head function passed too many arguments");

@@ -90,6 +90,7 @@ lval* builtin_add(lenv* e, lval* a);
 lval* builtin_sub(lenv* e, lval* a);
 lval* builtin_mul(lenv* e, lval* a);
 lval* builtin_div(lenv* e, lval* a);
+lval* builtin_modulo(lenv* e, lval* a);
 lval* builtin_lambda(lenv* e, lval* a);
 lval* builtin_def(lenv* e, lval* a);
 lval* builtin_put(lenv* e, lval* a);
