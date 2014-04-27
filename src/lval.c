@@ -289,9 +289,14 @@ lval* lval_eval_sexpr(lenv* e, lval* v) {
     lval* f = lval_pop(v, 0);
     if (f->type != LVAL_FUN) {
         lval_delete(v);
+        if (f->count) {
+            return lval_err("S-expression should start with a %s not a %s",
+                            ltype_name(LVAL_FUN), ltype_name(f->type));
+            lval_delete(f);
+        }
+        lval* result = lval_str("ok");
         lval_delete(f);
-        return lval_err("S-expression should start with a %s not a %s",
-                        ltype_name(LVAL_FUN), ltype_name(f->type));
+        return result;
     }
     lval* result = lval_call(e, f, v);
     lval_delete(f);
