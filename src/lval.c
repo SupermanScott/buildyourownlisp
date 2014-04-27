@@ -803,3 +803,13 @@ lval* builtin_print(lenv* e, lval* a) {
     lval_delete(a);
     return lval_sexpr();
 }
+
+lval* builtin_error(lenv* e, lval* a) {
+    LASSERT_SIZE(a, 1, "Error function requires exactly one argument");
+    LASSERT_ARG_TYPE(a, 0, LVAL_STR, "Error function requires a %s not a %s",
+                     ltype_name(LVAL_STR), ltype_name(a->cell[0]->type));
+
+    lval* err = lval_err(a->cell[0]->str);
+    lval_delete(a);
+    return err;
+}

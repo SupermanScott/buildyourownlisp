@@ -106,5 +106,6 @@ lval* builtin_and(lenv* e, lval* a);
 lval* builtin_not(lenv* e, lval* a);
 lval* builtin_load(lenv* e, lval* a);
 lval* builtin_print(lenv* e, lval* a);
+lval* builtin_error(lenv* e, lval* a);
 
 char* ltype_name(int t);
