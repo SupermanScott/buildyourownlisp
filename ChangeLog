@@ -1,0 +1,45 @@
+add in mod function
+empty s-expr ==> str "ok"
+if empty sexpr print "ok"
+add in error function
+load builtin and print builtin
+Strings and comments
+add in not builtin function
+remove qexpr from 'or' and 'and' functions
+add in builtin_add function
+add in or builtin function
+add in builtin_if into system
+equivalence functions
+gt, lt, gte and lte
+add in builtin_fun as symbol 'fun'.
+strcmp bug failed to define properly in env
+allow for optional arguments at the end of args
+Ability to create functions and define them in env
+add in function to print out entire enviroment
+print out the name of the function
+better error messages with unlimited arguments
+add in def builtin to define symbols
+add in lenv for defining symbols and functions
+lval_copy to create a copy of the same lval
+add in tests for init symbol
+test the len function
+tests for head and tail
+tests for eval and join
+test the list function
+move the lval_print into lval.h
+remove debug message
+need to have the rt library for testing
+if not libedit use stub functions
+add in travis.yml
+make it all autoconf'ed!
+remove Makefile in prep for automake
+move into src directory
+add init function
+add in len function to return len of qexpr
+all for Ctrl+D exiting
+return the error right away instead of breaking
+add in cons on qexprs
+add in QExpr and builtin functions for them
+evaluate math expressions
+refactor move lval stuffs to own header file
+start of buildownlisp.com
