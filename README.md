@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SupermanScott/buildyourownlisp.png)](https://travis-ci.org/SupermanScott/buildyourownlisp)
+[![Build Status](https://travis-ci.org/sdreynolds/buildyourownlisp.png)](https://travis-ci.org/SupermanScott/buildyourownlisp)
 
 Lispy
 =====
